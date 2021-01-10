@@ -74,7 +74,6 @@ static bool dottedlines;
 static bool shadow;
 static int level = MINLEVEL - 1,shapecount[NUMSHAPES];
 static char blockchar = ' ';
-static char blockshadowchar = 'O';
 
 /*
  * Functions
@@ -130,8 +129,8 @@ static void drawboard (board_t board)
 		   default:
                        if (board[x][y] < 0) { //shadow
 			 out_setcolor (-board[x][y],COLOR_BLACK);
-			 out_putch (blockshadowchar);
-			 out_putch (blockshadowchar);
+                         addch(ACS_CKBOARD);
+                         addch(ACS_CKBOARD);
                        } else {
 			 out_setcolor (COLOR_BLACK,board[x][y]);
 			 out_putch (blockchar);

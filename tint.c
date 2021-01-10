@@ -74,6 +74,7 @@ static bool dottedlines;
 static bool shadow;
 static int level = MINLEVEL - 1,shapecount[NUMSHAPES];
 static char blockchar = ' ';
+static char blockshadowchar = 'O';
 
 /*
  * Functions
@@ -127,9 +128,15 @@ static void drawboard (board_t board)
 			 break;
 			 /* Block */
 		   default:
+                       if (board[x][y] < 0) { //shadow
+			 out_setcolor (-board[x][y],COLOR_BLACK);
+			 out_putch (blockshadowchar);
+			 out_putch (blockshadowchar);
+                       } else {
 			 out_setcolor (COLOR_BLACK,board[x][y]);
 			 out_putch (blockchar);
 			 out_putch (blockchar);
+                       }
 		  }
 	 }
    out_setattr (ATTR_OFF);
@@ -157,22 +164,35 @@ static void drawnext (int shapenum,int x,int y)
 	 }
 }
 
+static void erasenext(int x, int y)
+{
+    int i;
+   out_setcolor (COLOR_BLACK,COLOR_BLACK);
+   for (i = y - 2; i < y + 2; i++)
+	 {
+		out_gotoxy (x - 2,i);
+		out_printf ("        ");
+	 }
+}
+
 /* Draw the background */
 static void drawbackground ()
 {
+    int y = 6;
    out_setattr (ATTR_OFF);
    out_setcolor (COLOR_WHITE,COLOR_BLACK);
-   out_gotoxy (4,YTOP + 7);   out_printf ("H E L P");
-   out_gotoxy (1,YTOP + 9);   out_printf ("p: Pause");
-   out_gotoxy (1,YTOP + 10);  out_printf ("j: Left");
-   out_gotoxy (1,YTOP + 11);  out_printf ("l: Right");
-   out_gotoxy (1,YTOP + 12);  out_printf ("k: Rotate");
-   out_gotoxy (1,YTOP + 13);  out_printf ("s: Draw next");
-   out_gotoxy (1,YTOP + 14);  out_printf ("d: Toggle lines");
-   out_gotoxy (1,YTOP + 15);  out_printf ("a: Speed up");
-   out_gotoxy (1,YTOP + 16);  out_printf ("q: Quit");
-   out_gotoxy (2,YTOP + 17);  out_printf ("SPACE: Drop");
-   out_gotoxy (3,YTOP + 19);  out_printf ("Next:");
+   out_gotoxy (4,YTOP + y);   out_printf ("H E L P");
+   out_gotoxy (1,YTOP + (y+=2));   out_printf ("p: Pause");
+   out_gotoxy (1,YTOP + (y+=1));  out_printf ("j: Left");
+   out_gotoxy (1,YTOP + (y+=1));  out_printf ("l: Right");
+   out_gotoxy (1,YTOP + (y+=1));  out_printf ("k: Rotate");
+   out_gotoxy (1,YTOP + (y+=1));  out_printf ("s: Draw shadow");
+   out_gotoxy (1,YTOP + (y+=1));  out_printf ("d: Toggle lines");
+   out_gotoxy (1,YTOP + (y+=1));  out_printf ("a: Speed up");
+   out_gotoxy (1,YTOP + (y+=1));  out_printf ("n: Draw next");
+   out_gotoxy (1,YTOP + (y+=1));  out_printf ("q: Quit");
+   out_gotoxy (2,YTOP + (y+=1));  out_printf ("SPACE: Drop");
+   out_gotoxy (3,YTOP + (y+=2));  out_printf ("Next:");
 }
 
 static int getsum ()
@@ -644,8 +664,9 @@ int main (int argc,char *argv[])
 				  finished = evaluate(&engine);          /* prevent key press after drop */
 				  break;
 				  /* show next piece */
-				case 's':
-				  shownext = TRUE;
+				case 'n':
+                                    shownext = shownext ? FALSE: TRUE;
+                                    if (!shownext) erasenext(3, YTOP+22);
 				  break;
 				  /* toggle dotted lines */
 				case 'd':
@@ -661,6 +682,12 @@ int main (int argc,char *argv[])
 				  else out_beep ();
 				  break;
 				  /* quit */
+                                case 'b':
+                                   if (level > MINLEVEL) {
+                                       level--;
+                                       in_timeout (DELAY);
+                                   } else out_beep();
+                                   break;
 				case 'q':
 				  finished = TRUE;
 				  break;
@@ -674,6 +701,10 @@ int main (int argc,char *argv[])
 				  out_gotoxy ((out_width () - 34) / 2,out_height () - 2);
 				  out_printf ("                                  ");
 				  break;
+                                case 's':
+                                  shadow = shadow ? FALSE : TRUE;
+                                    engine_setshadow(&engine, shadow);  
+                                  break;
 				  /* unknown keypress */
 				default:
 				  out_beep ();

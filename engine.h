@@ -123,4 +123,5 @@ void engine_move (engine_t *engine,action_t action);
  */
 int engine_evaluate (engine_t *engine);
 
+int engine_setshadow(engine_t *engine, bool shadow);
 #endif	/* #ifndef ENGINE_H */

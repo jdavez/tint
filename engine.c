@@ -109,6 +109,12 @@ static void drawshape (board_t board,shape_t *shape,int x,int y)
    for (i = 0; i < NUMBLOCKS; i++) board[x + shape->block[i].x][y + shape->block[i].y] = shape->color;
 }
 
+static void drawshadowshape (board_t board,shape_t *shape,int x,int y)
+{
+   int i;
+   for (i = 0; i < NUMBLOCKS; i++) board[x + shape->block[i].x][y + shape->block[i].y] = -shape->color;
+}
+
 /* Erase a shape from the board */
 static void eraseshape (board_t board,shape_t *shape,int x,int y)
 {
@@ -148,7 +154,7 @@ static bool shape_left (engine_t *engine)
             place_shadow_to_bottom(*board,shape,engine->curx_shadow,&engine->cury_shadow,engine->cury);
         }
 	 }
-   if (engine->shadow) drawshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
+   if (engine->shadow) drawshadowshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
    drawshape (*board,shape,engine->curx,engine->cury);
    return result;
 }
@@ -171,7 +177,7 @@ static bool shape_right (engine_t *engine)
             place_shadow_to_bottom(*board,shape,engine->curx_shadow,&engine->cury_shadow,engine->cury);
 		}
 	 }
-   if (engine->shadow) drawshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
+   if (engine->shadow) drawshadowshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
    drawshape (*board,shape,engine->curx,engine->cury);
    return result;
 }
@@ -193,7 +199,7 @@ static bool shape_rotate (engine_t *engine)
 		result = TRUE;
 		if (engine->shadow) place_shadow_to_bottom(*board,shape,engine->curx_shadow,&engine->cury_shadow,engine->cury);
 	 }
-   if (engine->shadow) drawshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
+   if (engine->shadow) drawshadowshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
    drawshape (*board,shape,engine->curx,engine->cury);
    return result;
 }
@@ -212,7 +218,7 @@ static bool shape_down (engine_t *engine)
 		result = TRUE;
 		if (engine->shadow) place_shadow_to_bottom(*board,shape,engine->curx_shadow,&engine->cury_shadow,engine->cury);
 	 }
-   if (engine->shadow) drawshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
+   if (engine->shadow) drawshadowshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
    drawshape (*board,shape,engine->curx,engine->cury);
    return result;
 }
@@ -227,7 +233,7 @@ static bool shape_bottom (engine_t *engine)
    eraseshape (*board,shape,engine->curx,engine->cury);
    if (engine->shadow) eraseshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
    result = !allowed (*board,shape,engine->curx,engine->cury + 1);
-   if (engine->shadow) drawshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
+   if (engine->shadow) drawshadowshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
    drawshape (*board,shape,engine->curx,engine->cury);
    return result;
 }
@@ -242,7 +248,7 @@ static int shape_drop (engine_t *engine)
    int droppedlines = 0;
 
    if (engine->shadow) {
-       drawshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
+       drawshadowshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
        droppedlines = engine->cury_shadow - engine->cury;
        engine->cury = engine->cury_shadow;
        return droppedlines;
@@ -401,4 +407,15 @@ int engine_evaluate (engine_t *engine)
 	 }
    shape_down (engine);
    return 1;
+}
+
+int engine_setshadow(engine_t *engine, bool shadow)
+{
+    if (engine->shadow && shadow == FALSE) {
+        board_t *board = &engine->board;
+        shape_t *shape = &engine->shapes[engine->curshape];
+        eraseshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
+    }
+    engine->shadow = shadow;
+    return 1;
 }

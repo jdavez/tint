@@ -74,6 +74,7 @@ static bool dottedlines;
 static bool shadow;
 static int level = MINLEVEL - 1,shapecount[NUMSHAPES];
 static char blockchar = ' ';
+static bool incrementlevel;
 
 /*
  * Functions
@@ -210,7 +211,15 @@ static void showstatus (engine_t *engine)
    int i,sum = getsum ();
    out_setattr (ATTR_OFF);
    out_setcolor (COLOR_WHITE,COLOR_BLACK);
-   out_gotoxy (1,YTOP + 1);   out_printf ("Your level: %d",level);
+   out_gotoxy (1,YTOP + 1);
+   if (incrementlevel)
+       out_printf ("Your level: %d",level);
+   else { 
+       out_printf ("Your level: ");
+       out_setcolor (COLOR_RED,COLOR_BLACK);
+       out_printf ("%d",level);
+       out_setcolor (COLOR_WHITE,COLOR_BLACK);
+   }
    out_gotoxy (1,YTOP + 2);   out_printf ("Full lines: %d",engine->status.droppedlines);
    out_gotoxy (2,YTOP + 4);   out_printf ("Score");
    out_setattr (ATTR_BOLD);
@@ -591,14 +600,14 @@ static bool evaluate (engine_t *engine)
     {
         /* game over (board full) */
         case -1:
-            if ((level < MAXLEVEL) && ((engine->status.droppedlines / 10) > level)) level++;
+            if ((level < MAXLEVEL) && ((engine->status.droppedlines / 10) > level) && incrementlevel) level++;
             finished = TRUE;
             break;
             /* shape at bottom, next one released */
         case 0:
             if ((level < MAXLEVEL) && ((engine->status.droppedlines / 10) > level))
             {
-                level++;
+                if (incrementlevel) level++;
                 in_timeout (DELAY);
             }
             shapecount[engine->curshape]++;
@@ -623,6 +632,7 @@ int main (int argc,char *argv[])
    rand_init ();							/* must be called before engine_init () */
    engine_init (&engine,score_function);	/* must be called before using engine.curshape */
    finished = shownext = shadow = FALSE;
+   incrementlevel = TRUE;
    memset (shapecount,0,NUMSHAPES * sizeof (int));
    shapecount[engine.curshape]++;
    parse_options (argc,argv);				/* must be called after initializing variables */
@@ -681,13 +691,20 @@ int main (int argc,char *argv[])
 					}
 				  else out_beep ();
 				  break;
-				  /* quit */
                                 case 'b':
                                    if (level > MINLEVEL) {
                                        level--;
                                        in_timeout (DELAY);
                                    } else out_beep();
                                    break;
+                                   /* choose block */
+                           case 'c':
+                               break;
+                               /* toggle increment level */
+                           case 'v':
+                               incrementlevel = incrementlevel ? FALSE: TRUE;
+                               break;
+				  /* quit */
 				case 'q':
 				  finished = TRUE;
 				  break;

@@ -699,6 +699,7 @@ int main (int argc,char *argv[])
                                    break;
                                    /* choose block */
                            case 'c':
+                               engine_move(&engine, ACTION_DISCARD);
                                break;
                                /* toggle increment level */
                            case 'v':

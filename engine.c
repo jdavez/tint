@@ -35,6 +35,7 @@
 #include "io.h"
 #include "engine.h"
 
+static void new_block(engine_t *engine) ;
 /*
  * Global variables
  */
@@ -280,6 +281,19 @@ static int shape_undo(engine_t *engine)
    return result;
 }
 
+static int shape_discard(engine_t *engine)
+{
+   board_t *board = &engine->board;
+   shape_t *shape = &engine->shapes[engine->curshape];
+   bool result = FALSE;
+   eraseshape (*board,shape,engine->curx,engine->cury);
+   if (engine->shadow) eraseshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
+
+   result = TRUE;
+   new_block(engine);
+   return result; 
+}
+
 /* This removes all the rows on the board that is completely filled with blocks */
 static int droplines (board_t board)
 {
@@ -383,21 +397,14 @@ void engine_move (engine_t *engine,action_t action)
                 break;
          case ACTION_UNDO:
              shape_undo(engine);
+             break;
+         case ACTION_DISCARD:
+             shape_discard(engine);
 	 }
 }
 
-/*
- * Evaluate the status of the specified tetris engine
- *
- * OUTPUT:
- *   1 = shape moved down one line
- *   0 = shape at bottom, next one released
- *  -1 = game over (board full)
- */
-int engine_evaluate (engine_t *engine)
+static void new_block(engine_t *engine) 
 {
-   if (shape_bottom (engine))
-	 {
 		/* update status information */
 		int dropped_lines = droplines(engine->board);
 		engine->status.droppedlines += dropped_lines;
@@ -427,6 +434,21 @@ int engine_evaluate (engine_t *engine)
 		memcpy (engine->shapes,SHAPES,sizeof (shapes_t));
                 memcpy(&engine_save[0], &engine_save[1], sizeof(engine_t));
                 memcpy(&engine_save[1], engine, sizeof(engine_t));
+}
+
+/*
+ * Evaluate the status of the specified tetris engine
+ *
+ * OUTPUT:
+ *   1 = shape moved down one line
+ *   0 = shape at bottom, next one released
+ *  -1 = game over (board full)
+ */
+int engine_evaluate (engine_t *engine)
+{
+   if (shape_bottom (engine))
+	 {
+             new_block(engine);
 		/* return games status */
 		return allowed (engine->board,&engine->shapes[engine->curshape],engine->curx,engine->cury) ? 0 : -1;
 	 }

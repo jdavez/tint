@@ -189,6 +189,7 @@ static void drawbackground ()
    out_gotoxy (1,YTOP + (y+=1));  out_printf ("d: Toggle lines");
    out_gotoxy (1,YTOP + (y+=1));  out_printf ("a: Speed up");
    out_gotoxy (1,YTOP + (y+=1));  out_printf ("n: Draw next");
+   out_gotoxy (1,YTOP + (y+=1));  out_printf ("u: Undo");
    out_gotoxy (1,YTOP + (y+=1));  out_printf ("q: Quit");
    out_gotoxy (2,YTOP + (y+=1));  out_printf ("SPACE: Drop");
    out_gotoxy (3,YTOP + (y+=2));  out_printf ("Next:");
@@ -704,6 +705,9 @@ int main (int argc,char *argv[])
                                   shadow = shadow ? FALSE : TRUE;
                                     engine_setshadow(&engine, shadow);  
                                   break;
+                           case 'u':
+                               engine_move(&engine, ACTION_UNDO);
+                               break;
 				  /* unknown keypress */
 				default:
 				  out_beep ();

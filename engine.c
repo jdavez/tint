@@ -50,6 +50,8 @@ const shapes_t SHAPES =
    { COLOR_RED,     6, FALSE, { { -1,  0 }, {  0,  0 }, {  1,  0 }, {  2,  0 } } }
 };
 
+static engine_t engine_save[2];    // for undo
+
 /*
  * Functions
  */
@@ -263,6 +265,21 @@ static int shape_drop (engine_t *engine)
    return droppedlines;
 }
 
+static int shape_undo(engine_t *engine)
+{
+   board_t *board = &engine->board;
+   shape_t *shape = &engine->shapes[engine->curshape];
+   bool result = FALSE;
+   eraseshape (*board,shape,engine->curx,engine->cury);
+   if (engine->shadow) eraseshape (*board,shape,engine->curx_shadow,engine->cury_shadow);
+   memcpy(engine, &engine_save[0], sizeof(engine_t));
+   board = &engine->board;
+   shape = &engine->shapes[engine->curshape];
+   result = TRUE;
+   drawshape (*board,shape,engine->curx,engine->cury);
+   return result;
+}
+
 /* This removes all the rows on the board that is completely filled with blocks */
 static int droplines (board_t board)
 {
@@ -332,6 +349,9 @@ void engine_init (engine_t *engine,void (*score_function)(engine_t *))
    memset (engine->board,0,sizeof (board_t));
    for (i = 0; i < NUMCOLS; i++) engine->board[i][NUMROWS - 1] = engine->board[i][NUMROWS - 2] = WALL;
    for (i = 0; i < NUMROWS; i++) engine->board[0][i] = engine->board[NUMCOLS - 1][i] = engine->board[NUMCOLS - 2][i] = WALL;
+
+   memcpy(&engine_save[0], engine, sizeof(engine_t));
+   memcpy(&engine_save[1], engine, sizeof(engine_t));
 }
 
 /*
@@ -360,6 +380,9 @@ void engine_move (engine_t *engine,action_t action)
 		/* drop shape to the bottom */
 	  case ACTION_DROP:
 		engine->status.dropcount += shape_drop (engine);
+                break;
+         case ACTION_UNDO:
+             shape_undo(engine);
 	 }
 }
 
@@ -402,6 +425,8 @@ int engine_evaluate (engine_t *engine)
 		engine->bag_iterator++;
 		/* initialize shapes */
 		memcpy (engine->shapes,SHAPES,sizeof (shapes_t));
+                memcpy(&engine_save[0], &engine_save[1], sizeof(engine_t));
+                memcpy(&engine_save[1], engine, sizeof(engine_t));
 		/* return games status */
 		return allowed (engine->board,&engine->shapes[engine->curshape],engine->curx,engine->cury) ? 0 : -1;
 	 }

@@ -405,12 +405,6 @@ void engine_move (engine_t *engine,action_t action)
 
 static void new_block(engine_t *engine) 
 {
-		/* update status information */
-		int dropped_lines = droplines(engine->board);
-		engine->status.droppedlines += dropped_lines;
-		engine->status.currentdroppedlines = dropped_lines;
-		/* increase score */
-		engine->score_function (engine);
 		engine->curx -= 5;
 		engine->curx = abs (engine->curx);
 		engine->curx_shadow -= 5;
@@ -448,7 +442,13 @@ int engine_evaluate (engine_t *engine)
 {
    if (shape_bottom (engine))
 	 {
-             new_block(engine);
+		/* update status information */
+		int dropped_lines = droplines(engine->board);
+		engine->status.droppedlines += dropped_lines;
+		engine->status.currentdroppedlines = dropped_lines;
+		/* increase score */
+		engine->score_function (engine);
+                new_block(engine);
 		/* return games status */
 		return allowed (engine->board,&engine->shapes[engine->curshape],engine->curx,engine->cury) ? 0 : -1;
 	 }
